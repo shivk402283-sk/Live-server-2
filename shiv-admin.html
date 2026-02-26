@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shiv Enterprise - Admin Control Center</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        :root { --gold: #ffcc00; --red: #ff3b30; --bg: #0a0a0a; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; padding: 30px; }
+        .admin-card { border: 2px solid var(--gold); border-radius: 20px; padding: 25px; background: #111; box-shadow: 0 0 30px rgba(255, 204, 0, 0.1); }
+        h1 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+        .stats { display: flex; gap: 20px; margin-top: 20px; }
+        .stat-item { flex: 1; background: #1a1a1a; padding: 20px; border-radius: 15px; text-align: center; border: 1px solid #333; }
+        .stat-item h2 { color: var(--gold); margin: 0; font-size: 28px; }
+        table { width: 100%; margin-top: 30px; border-collapse: collapse; }
+        th { background: var(--gold); color: black; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #222; font-size: 14px; }
+        .btn-block { background: var(--red); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-block:hover { opacity: 0.8; }
+        .live-dot { height: 10px; width: 10px; background-color: #00ff00; border-radius: 50%; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="admin-card">
+    <h1><span class="live-dot"></span> Shiv Admin Control Panel</h1>
+    
+    <div class="stats">
+        <div class="stat-item">
+            <p>Total Online</p>
+            <h2 id="onlineCount">0</h2>
+        </div>
+        <div class="stat-item">
+            <p>Server Status</p>
+            <h2 style="color: #00ff00;">ACTIVE</h2>
+        </div>
+    </div>
+
+    <h3>Call & Message History (Firebase Connected)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Activity Type</th>
+                <th>Details / Messages</th>
+                <th>Time</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="logTable">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    // Aapke Render server se connection
+    const socket = io("https://live-server-lrw7.onrender.com");
+
+    socket.on('connect', () => {
+        console.log("Shiv Admin Connected");
+    });
+
+    // Real-time stats update
+    socket.on('admin-stats', (data) => {
+        document.getElementById('onlineCount').innerText = data.online;
+    });
+
+    // Chat aur Call history handle karna [cite: 2026-02-24]
+    socket.on('new-log-entry', (log) => {
+        const table = document.getElementById('logTable');
+        const row = `<tr>
+            <td>${log.userId}</td>
+            <td>${log.type}</td>
+            <td>${log.content}</td>
+            <td>${new Date().toLocaleTimeString()}</td>
+            <td><button class="btn-block" onclick="blockUser('${log.userId}')">BLOCK</button></td>
+        </tr>`;
+        table.innerHTML = row + table.innerHTML;
+    });
+
+    function blockUser(id) {
+        if(confirm("Bhai, kya aap is user ko block karna chahte ho?")) {
+            socket.emit('admin-block-user', id);
+            alert("User Blocked!");
+        }
+    }
+</script>
+</body>
+</html>
+
