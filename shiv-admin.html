@@ -1,94 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Shiv Master Admin - Full Control</title>
+    <title>Shiv Master Control</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
-        :root { --gold: #ffcc00; --red: #ff3b30; --bg: #0d0d0d; }
-        body { background: var(--bg); color: #e0e0e0; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); padding-bottom: 10px; margin-bottom: 20px; }
-        .card { background: #1a1a1a; padding: 20px; border-radius: 12px; margin-bottom: 20px; border-left: 5px solid var(--gold); }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #151515; }
-        th { background: var(--gold); color: #000; padding: 12px; text-align: left; }
-        td { padding: 10px; border-bottom: 1px solid #333; }
-        
-        /* Interactive Buttons */
-        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-coin { background: #4caf50; color: white; margin-right: 5px; }
-        .btn-block { background: var(--red); color: white; }
-        input { padding: 8px; border-radius: 5px; border: 1px solid #444; background: #222; color: #fff; width: 80px; }
+        body { background: #000; color: #ffcc00; font-family: sans-serif; padding: 20px; }
+        .log-box { background: #111; border: 1px solid #333; height: 300px; overflow-y: auto; padding: 10px; margin-top: 10px; }
+        .stat-card { border: 2px solid #ffcc00; padding: 15px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <div class="header">
-        <h1>SHIV ENTERPRISE CONTROL ✅</h1>
-        <div id="status" style="color: #00ff00;">● SERVER LIVE (lrw7)</div>
+    <div class="stat-card">
+        <h1>SHIV CLOUD ADMIN ✅</h1>
+        <p>AppID: <b>SHIV_786</b> | AppSign: <b>SIGN_SHIV_PRIVATE_SDK</b></p>
+        <p>Status: <span id="status">Connecting...</span></p>
     </div>
 
-    <div class="grid">
-        <div class="card"><h3>Total Online</h3><h2 id="onlineCount">0</h2></div>
-        <div class="card"><h3>Calls Today</h3><h2>1,240</h2></div>
-        <div class="card"><h3>Total Revenue</h3><h2>₹45,000</h2></div>
+    <div class="log-box" id="liveLogs">
+        <div>[SYSTEM] Initializing Master Logs...</div>
     </div>
 
-    <div class="card">
-        <h3>User Management & Coin System</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>User ID / Name</th>
-                    <th>Current Coins</th>
-                    <th>Add Coins</th>
-                    <th>Call History</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="userTable">
-                </tbody>
-        </table>
-    </div>
-</div>
+    <script>
+        const socket = io("https://live-server-lrw7.onrender.com");
+        
+        socket.on('connect', () => {
+            document.getElementById('status').innerText = "ACTIVE (Connected to Render)";
+            socket.emit('auth-provider', { appId: "SHIV_786", serverSecret: "MASTER_KEY_99" });
+        });
 
-<script>
-    const socket = io("https://live-server-lrw7.onrender.com");
-
-    // Real-time Update Logic
-    socket.on('admin-data-update', (data) => {
-        document.getElementById('onlineCount').innerText = data.online;
-        const table = document.getElementById('userTable');
-        table.innerHTML = data.users.map(user => `
-            <tr>
-                <td>${user.id} <br><small>${user.email}</small></td>
-                <td id="coin-${user.id}">${user.coins}</td>
-                <td>
-                    <input type="number" id="input-${user.id}" placeholder="Qty">
-                    <button class="btn btn-coin" onclick="addCoins('${user.id}')">ADD</button>
-                </td>
-                <td><button class="btn" onclick="viewLogs('${user.id}')">VIEW LOGS</button></td>
-                <td><button class="btn btn-block" onclick="blockUser('${user.id}')">BLOCK USER</button></td>
-            </tr>
-        `).join('');
-    });
-
-    function addCoins(userId) {
-        const amount = document.getElementById(`input-${userId}`).value;
-        if(amount) {
-            socket.emit('admin-add-coins', { userId, amount: parseInt(amount) });
-            alert(`Bhai, ${amount} coins add kar diye gaye hain!`);
-        }
-    }
-
-    function blockUser(userId) {
-        if(confirm("Confirm: Is user ko block kar dein?")) {
-            socket.emit('admin-block-user', userId);
-        }
-    }
-</script>
+        socket.on('broadcast-gift', (data) => {
+            const logBox = document.getElementById('liveLogs');
+            logBox.innerHTML += `<div style="color: #00ff00;">[GIFT] ${data.from} sent ${data.giftName} to ${data.to}</div>`;
+        });
+    </script>
 </body>
 </html>
 
